@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.1
+        with:
+          version: "0.13.x"
+          enable-cache: true
+      # .python-version: the 3.11 floor
+      - run: uv sync --frozen --group dev
+      - run: uv run ruff check src/ tests/
+      - run: uv run ruff format --check src/ tests/
+
+  test-python:
+    name: test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every version pyproject.toml's classifiers claim.
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+    # Without this uv takes the interpreter from .python-version (the 3.11 floor)
+    # for every leg.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.1
+        with:
+          version: "0.13.x"
+          enable-cache: true
+          # Matrix legs share one cache key otherwise and race to save it ("Unable to reserve cache").
+          cache-suffix: py${{ matrix.python-version }}
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync --frozen --group dev
+      - name: Check the interpreter is the matrix version
+        run: uv run python -c "import sys; v = '%d.%d' % sys.version_info[:2]; assert v == '${{ matrix.python-version }}', f'ran {sys.version}, matrix says ${{ matrix.python-version }}'; print(sys.version)"
+      - run: uv run pytest
+
+  # The main ruleset requires a check named `test`; it passes only when every
+  # Python leg did.
+  test:
+    needs: test-python
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - run: '[ "${{ needs.test-python.result }}" = "success" ]'
+
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned and checksum-verified (the upgrade sweep moves the version and both digests).
+      # actionlint runs shellcheck on every `run:` script when shellcheck is on PATH, so
+      # install it rather than let those checks skip silently.
+      - name: Lint workflows (actionlint + shellcheck)
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+        run: |
+          case "$(uname -m)" in
+            x86_64) arch=amd64; sha=8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 ;;
+            aarch64) arch=arm64; sha=325e971b6ba9bfa504672e29be93c24981eeb1c07576d730e9f7c8805afff0c6 ;;
+            *) echo "unsupported arch $(uname -m)"; exit 1 ;;
+          esac
+          f="actionlint_${ACTIONLINT_VERSION}_linux_${arch}.tar.gz"
+          curl -fsSL -o "/tmp/$f" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$f"
+          echo "$sha  /tmp/$f" | sha256sum -c -
+          tar -xzf "/tmp/$f" -C /tmp actionlint
+          command -v shellcheck >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck; }
+          /tmp/actionlint -color

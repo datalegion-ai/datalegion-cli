@@ -1,0 +1,236 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # main only takes pull requests, so the release PR bumps the version and the tag must match it.
+      - name: Check the tag matches pyproject.toml
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -qx "version = \"${VERSION}\"" pyproject.toml || {
+            echo "::error::pyproject.toml is not version ${VERSION}; bump it in a PR before tagging"
+            exit 1
+          }
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.1
+        with:
+          version: "0.13.x"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --frozen --group dev
+
+      - name: Run lint
+        run: uv run ruff check src/ tests/
+
+      - name: Check formatting
+        run: uv run ruff format --check src/ tests/
+
+      - name: Build
+        run: uv build
+
+      - name: Prune uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    # Without this uv takes the interpreter from .python-version (the 3.11 floor)
+    # for every leg.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.1
+        with:
+          version: "0.13.x"
+          enable-cache: true
+          # Matrix legs share one cache key otherwise and race to save it ("Unable to reserve cache").
+          cache-suffix: py${{ matrix.python-version }}
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --frozen --group dev
+
+      - name: Check the interpreter is the matrix version
+        run: uv run python -c "import sys; v = '%d.%d' % sys.version_info[:2]; assert v == '${{ matrix.python-version }}', f'ran {sys.version}, matrix says ${{ matrix.python-version }}'; print(sys.version)"
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short
+
+      - name: Prune uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [lint, test]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.1
+        with:
+          version: "0.13.x"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Build
+        run: uv build
+
+      - name: Check if version exists on PyPI
+        id: pypi-check
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if curl -sSf "https://pypi.org/pypi/datalegion-cli/${VERSION}/json" > /dev/null 2>&1; then
+            echo "Version ${VERSION} already exists on PyPI, skipping publish"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to PyPI
+        if: steps.pypi-check.outputs.exists != 'true'
+        run: uv publish --trusted-publishing always
+
+      # The GitHub release carries the same files (the CLI's `github` update method and the README install them).
+      - name: Keep the dist for the GitHub release
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  update-homebrew:
+    name: Update Homebrew Tap
+    needs: [publish-pypi]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Wait for PyPI availability
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for i in $(seq 1 30); do
+            if curl -sSf "https://pypi.org/pypi/datalegion-cli/${VERSION}/json" > /dev/null 2>&1; then
+              echo "Version ${VERSION} available on PyPI"
+              exit 0
+            fi
+            echo "Waiting for PyPI... (attempt $i/30)"
+            sleep 10
+          done
+          echo "::error::Timed out waiting for PyPI availability"
+          exit 1
+
+      - name: Generate Homebrew formula
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          # Get the actual sdist URL and digest from PyPI JSON API
+          PYPI_JSON=$(curl -sSf "https://pypi.org/pypi/datalegion-cli/${VERSION}/json")
+          URL=$(echo "$PYPI_JSON" | python3 -c "import sys,json; urls=json.load(sys.stdin)['urls']; print(next(u['url'] for u in urls if u['packagetype']=='sdist'))")
+          SHA256=$(echo "$PYPI_JSON" | python3 -c "import sys,json; urls=json.load(sys.stdin)['urls']; print(next(u['digests']['sha256'] for u in urls if u['packagetype']=='sdist'))")
+
+          cat > datalegion-cli.rb <<FORMULA
+          class DatalegionCli < Formula
+            desc "CLI for the Data Legion API - agent-friendly, fully async"
+            homepage "https://www.datalegion.ai"
+            url "${URL}"
+            sha256 "${SHA256}"
+            license "MIT"
+
+            depends_on "python@3.15"
+
+            def install
+              venv = libexec/"venv"
+              system Formula["python@3.15"].opt_bin/"python3.15", "-m", "venv", venv
+              system venv/"bin/pip", "install", buildpath
+              bin.install_symlink Dir[venv/"bin/datalegion-cli"]
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/datalegion-cli version")
+            end
+          end
+          FORMULA
+
+          # Remove leading whitespace from heredoc indentation
+          sed -i 's/^          //' datalegion-cli.rb
+
+      - name: Push formula to tap
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/datalegion-ai/homebrew-tap.git" tap
+          mkdir -p tap/Formula
+          cp datalegion-cli.rb tap/Formula/datalegion-cli.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/datalegion-cli.rb
+          git diff --staged --quiet || git commit -m "datalegion-cli ${VERSION}"
+          git push
+
+  github-release:
+    name: Create GitHub Release
+    needs: [publish-pypi]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Download the dist
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag dist/*
