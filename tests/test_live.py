@@ -53,7 +53,8 @@ class TestPerson:
 
     def test_discover_answers_a_plain_english_query(self):
         body = run_json("person", "discover", "find software engineers at google", "--limit", "1")
-        assert isinstance(body["matches"], list)
+        assert len(body["matches"]) == 1
+        assert body["matches"][0]["person"]["legion_id"]
 
     def test_sandbox_enrich_returns_the_sample_person(self):
         body = run_json("--sandbox", "person", "enrich", "--email", "anyone@example.com")
@@ -82,7 +83,8 @@ class TestCompany:
             "company", "discover", "enterprise software companies with over 1000 employees",
             "--limit", "1",
         )  # fmt: skip
-        assert isinstance(body["matches"], list)
+        assert len(body["matches"]) == 1
+        assert body["matches"][0]["company"]["legion_id"]
 
 
 class TestUtility:

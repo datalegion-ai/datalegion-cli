@@ -256,6 +256,7 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           for i in $(seq 1 30); do
             uv tool install --no-cache "datalegion-cli==${VERSION}" && break
+            if [ "$i" = 30 ]; then echo "::error::datalegion-cli ${VERSION} never became installable from PyPI"; exit 1; fi
             echo "Waiting for PyPI... (attempt $i/30)"; sleep 10
           done
           datalegion-cli version | grep -q "\"${VERSION}\""
