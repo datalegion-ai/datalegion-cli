@@ -235,3 +235,48 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag dist/*
+
+  # The published package, installed the way users install it, must run. Each job checks the
+  # version it reports and makes one free sandbox call against the real API.
+  verify-pypi:
+    name: Verify the PyPI release
+    needs: [publish-pypi]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: astral-sh/setup-uv@v10.3.1
+        with:
+          version: "0.13.x"
+      - name: Install from PyPI and run it
+        env:
+          LEGION_API_KEY: ${{ secrets.DATALEGION_API_KEY }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for i in $(seq 1 30); do
+            uv tool install --no-cache "datalegion-cli==${VERSION}" && break
+            if [ "$i" = 30 ]; then echo "::error::datalegion-cli ${VERSION} never became installable from PyPI"; exit 1; fi
+            echo "Waiting for PyPI... (attempt $i/30)"; sleep 10
+          done
+          datalegion-cli version | grep -q "\"${VERSION}\""
+          datalegion-cli --sandbox person enrich --email anyone@example.com | grep -q sandbox_person_001
+
+  verify-homebrew:
+    name: Verify the Homebrew release
+    needs: [update-homebrew]
+    runs-on: macos-15
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Install from the tap and run it
+        env:
+          LEGION_API_KEY: ${{ secrets.DATALEGION_API_KEY }}
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          brew update --quiet
+          brew install datalegion-ai/tap/datalegion-cli
+          datalegion-cli version | grep -q "\"${VERSION}\""
+          datalegion-cli --sandbox person enrich --email anyone@example.com | grep -q sandbox_person_001
