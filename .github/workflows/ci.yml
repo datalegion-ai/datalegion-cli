@@ -43,6 +43,9 @@ jobs:
       - name: Check the interpreter is the matrix version
         run: uv run python -c "import sys; v = '%d.%d' % sys.version_info[:2]; assert v == '${{ matrix.python-version }}', f'ran {sys.version}, matrix says ${{ matrix.python-version }}'; print(sys.version)"
       - run: uv run pytest
+        env:
+          # The live tests (tests/test_live.py) call the real API; fork PRs get no secrets, so they skip there.
+          DATALEGION_API_KEY: ${{ secrets.DATALEGION_API_KEY }}
 
   # The main ruleset requires a check named `test`; it passes only when every
   # Python leg did.
