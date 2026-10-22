@@ -7,7 +7,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # never cancel a release mid-publish (a half-done PyPI/Homebrew publish is worse than a queue)
+  cancel-in-progress: false
 
 jobs:
   lint:
