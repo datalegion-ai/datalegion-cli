@@ -7,6 +7,7 @@ import sys
 from typing import Any
 
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 console = Console(stderr=True)
@@ -43,9 +44,10 @@ def emit_error(
             err["details"] = details
         print(json.dumps(err, default=str), file=sys.stdout)
     else:
-        console.print(f"[bold red]Error:[/bold red] {message}")
+        # API text is data, not markup: "[/x]" in a message raised MarkupError.
+        console.print(f"[bold red]Error:[/bold red] {escape(message)}")
         if details:
-            console.print(f"[dim]{details}[/dim]")
+            console.print(f"[dim]{escape(str(details))}[/dim]")
 
 
 def emit_success(data: Any, *, message: str | None = None, as_json: bool = True) -> None:
@@ -71,3 +73,10 @@ def emit_credits(used: str | None, remaining: str | None) -> None:
         parts.append(f"remaining: {remaining}")
     if parts:
         console.print(f"[dim]({', '.join(parts)})[/dim]")
+
+
+def emit_search_warning(warning: str | None) -> None:
+    """Show the API's Search-Warning on stderr: why a filter was flagged and what to change."""
+    if warning:
+        # One line even when stderr is not a terminal (Rich wraps at 80 columns there).
+        console.print(f"[yellow]search warning:[/yellow] {escape(warning)}", soft_wrap=True)

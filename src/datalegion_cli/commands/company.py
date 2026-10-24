@@ -10,7 +10,7 @@ import typer
 
 from datalegion_cli.async_typer import async_command
 from datalegion_cli.client import APIError, LegionClient
-from datalegion_cli.output import emit_credits, emit_error, emit_json
+from datalegion_cli.output import emit_credits, emit_error, emit_json, emit_search_warning
 
 app = typer.Typer(name="company", help="Company enrichment, search, and discovery.")
 
@@ -122,6 +122,7 @@ async def search(
         )
         emit_json(result)
         emit_credits(client.last_credits_used, client.last_credits_remaining)
+        emit_search_warning(client.last_search_warning)
     except APIError as e:
         emit_error(e.message, code=e.error, details=e.details, as_json=True)
         raise typer.Exit(1) from e
@@ -150,6 +151,7 @@ async def discover(
         )
         emit_json(result)
         emit_credits(client.last_credits_used, client.last_credits_remaining)
+        emit_search_warning(client.last_search_warning)
     except APIError as e:
         emit_error(e.message, code=e.error, details=e.details, as_json=True)
         raise typer.Exit(1) from e

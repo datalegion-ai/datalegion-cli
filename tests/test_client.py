@@ -82,6 +82,15 @@ class TestRequest:
         assert mock_client.last_credits_used == "1"
         assert mock_client.last_credits_remaining == "99"
         mock_get.assert_called_once()
+        assert mock_client.last_search_warning is None
+
+    async def test_search_warning_header_is_kept(self, mock_client, monkeypatch):
+        resp = make_response(200, {"matches": []}, {"Search-Warning": "flagged"})
+        mock_client._client = AsyncMock()
+        mock_client._client.is_closed = False
+        mock_client._client.post = AsyncMock(return_value=resp)
+        await mock_client.request("POST", "/person/search", payload={"query": "x"})
+        assert mock_client.last_search_warning == "flagged"
 
     async def test_successful_post(self, mock_client, monkeypatch):
 
