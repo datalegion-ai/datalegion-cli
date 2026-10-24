@@ -91,3 +91,14 @@ class TestEmitSearchWarning:
     def test_none_no_output(self, capsys):
         emit_search_warning(None)
         assert capsys.readouterr().err == ""
+
+
+class TestEmitErrorEscapes:
+    def test_markup_in_a_message_prints_literally(self, capsys):
+        emit_error("bad filter [/x] near [red]", details="see [b]")
+        err = capsys.readouterr().err
+        assert "[/x]" in err and "[red]" in err and "[b]" in err
+
+    def test_a_long_search_warning_stays_on_one_line(self, capsys):
+        emit_search_warning("word " * 40)
+        assert capsys.readouterr().err.count("\n") == 1

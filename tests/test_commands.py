@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
+import pytest
 from typer.testing import CliRunner
 
 from datalegion_cli.main import app
@@ -33,6 +34,7 @@ def _mock_client_request(response_json, status_code=200, headers=None):
             )
         self.last_credits_used = hdrs.get("Credits-Used")
         self.last_credits_remaining = hdrs.get("Credits-Remaining")
+        self.last_search_warning = hdrs.get("Search-Warning")
         return resp.json()
 
     return patch("datalegion_cli.client.LegionClient.request", fake_request)
@@ -466,3 +468,25 @@ class TestEnrichOffersNoMultipleResults:
         for payload in sent:
             assert "multiple_results" not in payload
             assert "limit" not in payload
+
+
+class TestSearchWarning:
+    """search and discover print the API's Search-Warning on stderr; stdout stays JSON."""
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ["person", "search", "SELECT * FROM people WHERE company_industry = 'x'"],
+            ["person", "discover", "people in x"],
+            ["company", "search", "SELECT * FROM companies WHERE industry = 'x'"],
+            ["company", "discover", "companies in x"],
+        ],
+    )
+    def test_the_warning_reaches_stderr(self, monkeypatch, args):
+        _mock_config(monkeypatch)
+        warning = "No company_industry value matches 'x'"
+        with _mock_client_request({"matches": [], "total": 0}, headers={"Search-Warning": warning}):
+            result = runner.invoke(app, args)
+        assert result.exit_code == 0
+        assert json.loads(result.stdout) == {"matches": [], "total": 0}
+        assert f"search warning: {warning}" in result.stderr

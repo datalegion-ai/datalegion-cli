@@ -14,6 +14,7 @@ datalegion-cli person enrich --email john@example.com
 
 - **Fully async** — async from entry point to HTTP client, powered by `asyncio` and `httpx`
 - **Agent-friendly** — all output is JSON to stdout, logs go to stderr, supports `--stdin` for piping
+- **Search warnings** — when `search` or `discover` flags one of your filters (for example an industry name no stored value matches), the API's explanation is printed on stderr as `search warning: ...`; stdout stays JSON
 - **Encrypted config** — API keys are stored encrypted at rest (Fernet + PBKDF2, machine-tied)
 - **Auto-update** — checks PyPI for a newer release and self-updates via Homebrew, GitHub release, git pull, or pip/uv
 - **Multiple install methods** — Homebrew, GitHub release, pip/uv (with private index support), or from source
