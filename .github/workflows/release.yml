@@ -149,7 +149,7 @@ jobs:
     name: Update Homebrew Tap
     needs: [publish-pypi]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15  # the PyPI wait loop and the formula read each retry up to ~5 minutes
     permissions:
       contents: read
     steps:
@@ -171,8 +171,9 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
 
-          # Get the actual sdist URL and digest from PyPI JSON API
-          PYPI_JSON=$(curl -sSf "https://pypi.org/pypi/datalegion-cli/${VERSION}/json")
+          # Get the actual sdist URL and digest from PyPI JSON API. Right after publishing, PyPI's
+          # CDN can still answer 404 for the new version, so retry for up to a few minutes.
+          PYPI_JSON=$(curl -sSf --retry 30 --retry-delay 10 --retry-all-errors "https://pypi.org/pypi/datalegion-cli/${VERSION}/json")
           URL=$(echo "$PYPI_JSON" | python3 -c "import sys,json; urls=json.load(sys.stdin)['urls']; print(next(u['url'] for u in urls if u['packagetype']=='sdist'))")
           SHA256=$(echo "$PYPI_JSON" | python3 -c "import sys,json; urls=json.load(sys.stdin)['urls']; print(next(u['digests']['sha256'] for u in urls if u['packagetype']=='sdist'))")
 
