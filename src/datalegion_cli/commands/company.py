@@ -29,7 +29,10 @@ MinConfidence = Annotated[
     typer.Option("--min-confidence", help="Minimum confidence: high, moderate, low."),
 ]
 RequiredFields = Annotated[
-    str | None, typer.Option("--required", help="Comma-separated required fields.")
+    str | None, typer.Option(
+        "--required",
+        help="Fields a match must have, with AND, OR and parentheses, e.g. 'domain AND socials'.",
+    )
 ]
 
 
