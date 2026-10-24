@@ -1,6 +1,6 @@
 [project]
 name = "datalegion-cli"
-version = "1.5.3"
+version = "1.6.0"
 description = "CLI for the Data Legion API — agent-friendly, fully async"
 readme = "README.md"
 requires-python = ">=3.11"
