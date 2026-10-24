@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import json
 
-from datalegion_cli.output import emit_credits, emit_error, emit_json, emit_success
+from datalegion_cli.output import (
+    emit_credits,
+    emit_error,
+    emit_json,
+    emit_search_warning,
+    emit_success,
+)
 
 
 class TestEmitJson:
@@ -73,3 +79,15 @@ class TestEmitCredits:
         emit_credits(None, None)
         err = capsys.readouterr().err
         assert err == ""
+
+
+class TestEmitSearchWarning:
+    def test_warning_goes_to_stderr(self, capsys):
+        emit_search_warning("No company_industry value matches '[x]'")
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert "search warning:" in captured.err and "'[x]'" in captured.err
+
+    def test_none_no_output(self, capsys):
+        emit_search_warning(None)
+        assert capsys.readouterr().err == ""

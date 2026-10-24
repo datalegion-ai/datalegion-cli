@@ -58,6 +58,7 @@ class LegionClient:
         self._client: httpx.AsyncClient | None = None
         self.last_credits_used: str | None = None
         self.last_credits_remaining: str | None = None
+        self.last_search_warning: str | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -116,6 +117,8 @@ class LegionClient:
         # Expose credit headers
         self.last_credits_used = resp.headers.get("Credits-Used")
         self.last_credits_remaining = resp.headers.get("Credits-Remaining")
+        # search/discover: why a filter was flagged and what to change
+        self.last_search_warning = resp.headers.get("Search-Warning")
 
         return resp.json()
 

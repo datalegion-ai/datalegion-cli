@@ -7,6 +7,7 @@ import sys
 from typing import Any
 
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 console = Console(stderr=True)
@@ -71,3 +72,9 @@ def emit_credits(used: str | None, remaining: str | None) -> None:
         parts.append(f"remaining: {remaining}")
     if parts:
         console.print(f"[dim]({', '.join(parts)})[/dim]")
+
+
+def emit_search_warning(warning: str | None) -> None:
+    """Show the API's Search-Warning on stderr: why a filter was flagged and what to change."""
+    if warning:
+        console.print(f"[yellow]search warning:[/yellow] {escape(warning)}")
