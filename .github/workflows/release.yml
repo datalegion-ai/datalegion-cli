@@ -149,7 +149,7 @@ jobs:
     name: Update Homebrew Tap
     needs: [publish-pypi]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15  # the PyPI wait loop and the formula read each retry up to ~5 minutes
     permissions:
       contents: read
     steps:
