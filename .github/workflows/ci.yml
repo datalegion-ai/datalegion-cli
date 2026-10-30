@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [main]
 
+# Every job only reads the repo; a job that needs more says so itself.
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-26.04
