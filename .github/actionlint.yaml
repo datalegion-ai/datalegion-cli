@@ -1,0 +1,5 @@
+# actionlint 1.7.12 predates GitHub's ubuntu-26.04 runner label and rejects it as unknown.
+# Remove this once the pinned actionlint knows the label.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
