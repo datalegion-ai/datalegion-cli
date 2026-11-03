@@ -490,3 +490,29 @@ class TestSearchWarning:
         assert result.exit_code == 0
         assert json.loads(result.stdout) == {"matches": [], "total": 0}
         assert f"search warning: {warning}" in result.stderr
+
+
+class TestSearchLimitDefault:
+    """search and discover send limit 1 unless --limit says otherwise (the API's default too)."""
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ["person", "search", "SELECT * FROM people WHERE city = 'austin'"],
+            ["person", "discover", "engineers in austin"],
+            ["company", "search", "SELECT * FROM companies WHERE industry = 'banking'"],
+            ["company", "discover", "banks in austin"],
+        ],
+    )
+    def test_the_default_limit_is_one(self, monkeypatch, args):
+        _mock_config(monkeypatch)
+        sent: list[dict] = []
+
+        async def capture(self, method, endpoint, *, payload=None, params=None):
+            sent.append(payload or {})
+            return {"matches": [], "total": 0}
+
+        with patch("datalegion_cli.client.LegionClient.request", capture):
+            assert runner.invoke(app, args).exit_code == 0
+            assert runner.invoke(app, [*args, "--limit", "25"]).exit_code == 0
+        assert [p["limit"] for p in sent] == [1, 25]
