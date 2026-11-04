@@ -129,7 +129,7 @@ async def enrich(
 @async_command
 async def search(
     query: Annotated[str, typer.Argument(help="SQL SELECT query against the people table.")],
-    limit: LimitOpt = 10,
+    limit: LimitOpt = 1,
     titlecase: TitleOpt = False,
     include_fields: FieldsInclude = None,
     exclude_fields: FieldsExclude = None,
@@ -163,7 +163,7 @@ async def search(
 @async_command
 async def discover(
     query: Annotated[str, typer.Argument(help="Natural language search query.")],
-    limit: LimitOpt = 10,
+    limit: LimitOpt = 1,
     titlecase: TitleOpt = False,
     include_fields: FieldsInclude = None,
     exclude_fields: FieldsExclude = None,
