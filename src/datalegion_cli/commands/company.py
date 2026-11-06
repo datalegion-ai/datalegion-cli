@@ -108,7 +108,7 @@ async def search(
     include_fields: FieldsInclude = None,
     exclude_fields: FieldsExclude = None,
 ) -> None:
-    """Search for companies with a SQL SELECT over the companies table, no LIMIT (Beta).
+    """Search for companies with a SQL SELECT over the companies table, no LIMIT.
 
     Examples:
         datalegion-cli company search "SELECT * FROM companies WHERE industry ILIKE '%software%' AND legion_employee_count > 100"
