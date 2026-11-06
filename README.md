@@ -137,7 +137,7 @@ datalegion-cli person enrich --email john@example.com --min-confidence high
 datalegion-cli person enrich --email john@example.com --fields "full_name,emails,phones"
 ```
 
-### Person search (Beta)
+### Person search
 
 ```bash
 # SQL-based search
@@ -164,7 +164,7 @@ datalegion-cli company enrich --ticker AAPL
 datalegion-cli company enrich --name "Stripe" --industry "Financial Services"
 ```
 
-### Company search (Beta)
+### Company search
 
 ```bash
 # SQL-based search

@@ -134,7 +134,7 @@ async def search(
     include_fields: FieldsInclude = None,
     exclude_fields: FieldsExclude = None,
 ) -> None:
-    """Search for people with a SQL SELECT over the people table, no LIMIT (Beta).
+    """Search for people with a SQL SELECT over the people table, no LIMIT.
 
     Examples:
         datalegion-cli person search "SELECT * FROM people WHERE job_title = 'ceo' AND company_name ILIKE '%acme%'"
