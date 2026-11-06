@@ -130,7 +130,7 @@ datalegion-cli person enrich --name "Jane Smith" --company "Acme Corp" --city "N
 # By LinkedIn
 datalegion-cli person enrich --social-url "https://linkedin.com/in/johndoe"
 
-# Multiple results with minimum confidence
+# Minimum confidence
 datalegion-cli person enrich --email john@example.com --min-confidence high
 
 # Select specific fields
