@@ -27,7 +27,7 @@ datalegion-cli person enrich --email john@example.com
 brew install datalegion-ai/tap/datalegion-cli
 ```
 
-### From PyPI (or private index)
+### From PyPI (or Private Index)
 
 ```bash
 uv pip install datalegion-cli
@@ -45,7 +45,7 @@ To install from a private index:
 uv pip install datalegion-cli --extra-index-url https://your-private-index.com/simple
 ```
 
-### From GitHub release
+### From GitHub Release
 
 Download the `.whl` from the [latest release](https://github.com/datalegion-ai/datalegion-cli/releases/latest) and install:
 
@@ -53,7 +53,7 @@ Download the `.whl` from the [latest release](https://github.com/datalegion-ai/d
 uv pip install datalegion_cli-*.whl
 ```
 
-### From source
+### From Source
 
 ```bash
 git clone https://github.com/datalegion-ai/datalegion-cli.git
@@ -85,7 +85,7 @@ Or via environment variable (takes precedence over file config):
 export LEGION_API_KEY=legion_your_key_here
 ```
 
-### Other config options
+### Other Config Options
 
 ```bash
 # Set the API base URL
@@ -103,7 +103,7 @@ datalegion-cli config path
 
 Config is stored at `~/.datalegion/config.toml`. Override the location with `LEGION_CONFIG_DIR`.
 
-### Install method detection
+### Install Method Detection
 
 The `update` command auto-detects how the CLI was installed:
 
@@ -118,7 +118,7 @@ You can override detection by setting `install_method` in config. For pip instal
 
 ## Usage
 
-### Person enrichment
+### Person Enrichment
 
 ```bash
 # By email
@@ -137,21 +137,21 @@ datalegion-cli person enrich --email john@example.com --min-confidence high
 datalegion-cli person enrich --email john@example.com --fields "full_name,emails,phones"
 ```
 
-### Person search
+### Person Search
 
 ```bash
 # SQL-based search
 datalegion-cli person search "SELECT * FROM people WHERE company_name ILIKE '%google%' AND state = 'CA'" --limit 5
 ```
 
-### Person discovery (Beta)
+### Person Discovery (Beta)
 
 ```bash
 # Natural-language search
 datalegion-cli person discover "software engineers in San Francisco who know Rust" --limit 10
 ```
 
-### Company enrichment
+### Company Enrichment
 
 ```bash
 # By domain
@@ -164,21 +164,21 @@ datalegion-cli company enrich --ticker AAPL
 datalegion-cli company enrich --name "Stripe" --industry "Financial Services"
 ```
 
-### Company search
+### Company Search
 
 ```bash
 # SQL-based search
 datalegion-cli company search "SELECT * FROM companies WHERE industry ILIKE '%software%' AND legion_employee_count > 100"
 ```
 
-### Company discovery (Beta)
+### Company Discovery (Beta)
 
 ```bash
 # Natural-language search
 datalegion-cli company discover "fintech startups in New York with under 50 employees"
 ```
 
-### Utility commands
+### Utility Commands
 
 ```bash
 # Clean and normalize fields
@@ -205,7 +205,7 @@ datalegion-cli credits balance
 datalegion-cli credits usage --from 2026-01-01 --to 2026-03-01
 ```
 
-### Other commands
+### Other Commands
 
 ```bash
 # Check for updates
@@ -218,7 +218,7 @@ datalegion-cli update
 datalegion-cli version
 ```
 
-## Agent / automation usage
+## Agent / Automation Usage
 
 The CLI is designed to be called by AI agents and scripts. Key patterns:
 
@@ -239,13 +239,13 @@ datalegion-cli person enrich --email bad 2>/dev/null
 
 ## Sandbox
 
-Try commands without spending credits: `--sandbox` (or `LEGION_SANDBOX=1`, or `datalegion-cli config set sandbox true`) makes enrich, bulk enrich, search and discover return sample records with every field a real record has. Utilities, which are free, still call the real API. Sandbox discover answers only a few fixed example queries.
+Try commands without spending credits: `--sandbox` (or `LEGION_SANDBOX=1`, or `datalegion-cli config set sandbox true`) makes Enrich, Bulk Enrich, Search and Discover return sample records with every field a real record has. Utilities, which are free, still call the real API. Sandbox discover answers only a few fixed example queries.
 
 ```bash
 datalegion-cli --sandbox person enrich --email anyone@example.com
 ```
 
-## Global flags
+## Global Flags
 
 | Flag | Description |
 |------|-------------|
