@@ -168,6 +168,36 @@ class TestPersonSearch:
         assert result.exit_code == 0
 
 
+class TestSearchQueryObjectAndCursor:
+    @pytest.mark.parametrize("entity", ["person", "company"])
+    def test_a_json_query_goes_as_an_object_with_the_cursor(self, monkeypatch, entity):
+        _mock_config(monkeypatch)
+        sent = []
+
+        async def fake_request(self, method, endpoint, *, payload=None, params=None):
+            sent.append(payload)
+            return {"matches": [], "total": 0, "next_cursor": "abc"}
+
+        monkeypatch.setattr("datalegion_cli.client.LegionClient.request", fake_request)
+        result = runner.invoke(
+            app, [entity, "search", '{"exists": {"field": "legion_id"}}', "--cursor", "abc"]
+        )
+        assert result.exit_code == 0, result.output
+        assert sent[0]["query"] == {"exists": {"field": "legion_id"}}
+        assert sent[0]["cursor"] == "abc"
+        assert json.loads(result.stdout)["next_cursor"] == "abc"
+
+    def test_a_query_that_looks_like_json_but_does_not_parse_is_refused(self, monkeypatch):
+        _mock_config(monkeypatch)
+        result = runner.invoke(app, ["person", "search", "{not json"])
+        assert result.exit_code == 2
+
+    def test_sql_stays_a_string(self):
+        from datalegion_cli.commands import search_query
+
+        assert search_query("SELECT * FROM people") == "SELECT * FROM people"
+
+
 class TestPersonDiscover:
     def test_discover(self, monkeypatch):
         _mock_config(monkeypatch)
