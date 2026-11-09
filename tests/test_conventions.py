@@ -34,5 +34,6 @@ def test_the_vendored_copy_names_its_release() -> None:
 def test_uv_resolves_no_release_under_a_day_old():
     """A one-day cooldown: uv resolves no release under 24 hours old."""
     uv = tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["uv"]
+    assert uv["required-version"] == ">=0.11.8"  # the first uv writing the lock's relative form
     assert uv["exclude-newer"] == "1 day"
     assert 'exclude-newer-span = "P1D"' in (REPO / "uv.lock").read_text()
