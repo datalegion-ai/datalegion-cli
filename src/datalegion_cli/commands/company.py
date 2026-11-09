@@ -10,6 +10,7 @@ import typer
 
 from datalegion_cli.async_typer import async_command
 from datalegion_cli.client import APIError, LegionClient
+from datalegion_cli.commands import CursorOpt, search_query
 from datalegion_cli.output import emit_credits, emit_error, emit_json, emit_search_warning
 
 app = typer.Typer(name="company", help="Company enrichment, search, and discovery.")
@@ -102,8 +103,14 @@ async def enrich(
 @app.command()
 @async_command
 async def search(
-    query: Annotated[str, typer.Argument(help="SQL SELECT query against the companies table.")],
+    query: Annotated[
+        str,
+        typer.Argument(
+            help="SQL SELECT query against the companies table, or a query object as JSON."
+        ),
+    ],
     limit: LimitOpt = 1,
+    cursor: CursorOpt = None,
     titlecase: TitleOpt = False,
     include_fields: FieldsInclude = None,
     exclude_fields: FieldsExclude = None,
@@ -114,12 +121,15 @@ async def search(
         datalegion-cli company search "SELECT * FROM companies WHERE industry ILIKE '%software%' AND legion_employee_count > 100"
         datalegion-cli company search "SELECT * FROM companies WHERE name ILIKE '%tech%'" --limit 20
         datalegion-cli company search "SELECT * FROM companies WHERE domain = 'stripe.com'" --fields "name,domain,industry"
+        datalegion-cli company search '{"term": {"domain": "stripe.com"}}'
+        datalegion-cli company search "SELECT * FROM companies WHERE industry = 'banking'" --limit 100 --cursor <next_cursor>
     """
     client = LegionClient()
     try:
         result = await client.company_search(
-            query=query,
+            query=search_query(query),
             limit=limit,
+            cursor=cursor,
             titlecase=titlecase,
             include_fields=include_fields,
             exclude_fields=exclude_fields,

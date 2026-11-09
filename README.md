@@ -144,6 +144,13 @@ datalegion-cli person enrich --email john@example.com --fields "full_name,emails
 datalegion-cli person search "SELECT * FROM people WHERE company_name ILIKE '%google%' AND state = 'CA'" --limit 5
 ```
 
+`query` can also be an Elasticsearch-style query object as JSON (`bool`, `term`, `terms`, `match`, `match_phrase`, `range`, `exists`, `prefix`, `wildcard`, `nested`), on the response's own field names. For deep paging, pass each page's `next_cursor` back with `--cursor`; the last page has none. Company search takes both too.
+
+```bash
+datalegion-cli person search '{"bool": {"filter": [{"term": {"company_name": "google"}}, {"match": {"job_title": "engineer"}}]}}' --limit 100
+datalegion-cli person search "SELECT * FROM people WHERE state = 'ohio'" --limit 100 --cursor "<next_cursor from the last page>"
+```
+
 ### Person Discovery (Beta)
 
 ```bash
