@@ -105,3 +105,9 @@ known-first-party = ["datalegion_cli"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.uv]
+# 0.11.8 writes the lock's sentinel form for a relative exclude-newer (below).
+required-version = ">=0.11.8"
+# The fleet's one-day cooldown: no release under 24 h old is resolved, by any uv command here.
+exclude-newer = "1 day"
