@@ -2,7 +2,7 @@
 
 The official command-line interface for the [Data Legion](https://www.datalegion.ai) API. Built for both humans and AI agents.
 
-Look up people and companies by email, phone, name, domain, LinkedIn, or ticker symbol. Search using SQL syntax. Clean, hash, and validate data fields before or after enrichment. Track credit usage and manage your configuration — all from the terminal.
+Look up people and companies by email, phone, name, domain, LinkedIn, or ticker symbol. Search using SQL syntax. Clean, hash, and validate data fields before or after enrichment. Track credit usage and manage your configuration, all from the terminal.
 
 ```bash
 pip install datalegion-cli
@@ -12,12 +12,12 @@ datalegion-cli person enrich --email john@example.com
 
 ## Features
 
-- **Fully async** — async from entry point to HTTP client, powered by `asyncio` and `httpx`
-- **Agent-friendly** — all output is JSON to stdout, logs go to stderr, supports `--stdin` for piping
+- **Fully async**: async from entry point to HTTP client, powered by `asyncio` and `httpx`
+- **Agent-friendly**: all output is JSON to stdout, logs go to stderr, supports `--stdin` for piping
 - **Search warnings**: when `search` or `discover` flags one of your filters (for example an industry name no stored value matches), the API's explanation is printed on stderr as `search warning: ...`; stdout stays JSON
-- **Encrypted config** — API keys are stored encrypted at rest (Fernet + PBKDF2, machine-tied)
-- **Auto-update** — checks PyPI for a newer release and self-updates via Homebrew, GitHub release, git pull, or pip/uv
-- **Multiple install methods** — Homebrew, GitHub release, pip/uv (with private index support), or from source
+- **Encrypted config**: API keys are stored encrypted at rest (Fernet + PBKDF2, machine-tied)
+- **Auto-update**: checks PyPI for a newer release and self-updates via Homebrew, GitHub release, git pull, or pip/uv
+- **Multiple install methods**: Homebrew, GitHub release, pip/uv (with private index support), or from source
 
 ## Installation
 
@@ -230,7 +230,7 @@ datalegion-cli version
 The CLI is designed to be called by AI agents and scripts. Key patterns:
 
 ```bash
-# All output is JSON to stdout — parse it directly
+# All output is JSON to stdout; parse it directly
 datalegion-cli person enrich --email john@example.com | jq '.matches[0].person.full_name'
 
 # Pipe JSON payloads via stdin
@@ -246,7 +246,7 @@ datalegion-cli person enrich --email bad 2>/dev/null
 
 ## Sandbox
 
-Try commands without spending credits: `--sandbox` (or `LEGION_SANDBOX=1`, or `datalegion-cli config set sandbox true`) makes Enrich, Bulk Enrich, Search and Discover return sample records with every field a real record has. Utilities, which are free, still call the real API. Sandbox discover answers only a few fixed example queries.
+Try commands without spending credits: `--sandbox` (or `LEGION_SANDBOX=1`, or `datalegion-cli config set sandbox true`) makes enrich, search and discover return sample records with every field a real record has. Utilities, which are free, still call the real API. Sandbox discover answers only a few fixed example queries.
 
 ```bash
 datalegion-cli --sandbox person enrich --email anyone@example.com
