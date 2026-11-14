@@ -187,6 +187,22 @@ class TestSearchQueryObjectAndCursor:
         assert sent[0]["cursor"] == "abc"
         assert json.loads(result.stdout)["next_cursor"] == "abc"
 
+    @pytest.mark.parametrize("entity", ["person", "company"])
+    def test_discover_sends_the_cursor_and_prints_next_cursor(self, monkeypatch, entity):
+        _mock_config(monkeypatch)
+        sent = []
+
+        async def fake_request(self, method, endpoint, *, payload=None, params=None):
+            sent.append((endpoint, payload))
+            return {"matches": [], "total": 0, "next_cursor": "def", "generated_query": "SELECT 1"}
+
+        monkeypatch.setattr("datalegion_cli.client.LegionClient.request", fake_request)
+        result = runner.invoke(app, [entity, "discover", "nurses in Ohio", "--cursor", "abc"])
+        assert result.exit_code == 0, result.output
+        assert sent[0][0] == f"/{entity}/discover"
+        assert sent[0][1]["query"] == "nurses in Ohio" and sent[0][1]["cursor"] == "abc"
+        assert json.loads(result.stdout)["next_cursor"] == "def"
+
     def test_a_query_that_looks_like_json_but_does_not_parse_is_refused(self, monkeypatch):
         _mock_config(monkeypatch)
         result = runner.invoke(app, ["person", "search", "{not json"])
