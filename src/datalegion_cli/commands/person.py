@@ -86,6 +86,7 @@ async def enrich(
     Examples:
         datalegion-cli person enrich --email john@example.com
         datalegion-cli person enrich --name "Jane Doe" --company "Acme Corp"
+        datalegion-cli person enrich --npi 1234567893
         datalegion-cli person enrich --phone "+14155551234" --fields "full_name,work_email,job_title"
         echo '{"email":"jane@example.com"}' | datalegion-cli person enrich --stdin
     """
