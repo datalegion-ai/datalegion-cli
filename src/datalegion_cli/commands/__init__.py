@@ -11,7 +11,7 @@ CursorOpt = Annotated[
     str | None,
     typer.Option(
         "--cursor",
-        help="The previous page's next_cursor, for deep paging (instead of an offset).",
+        help="The previous page's next_cursor, with the same query, for the next page (search: in place of --offset).",
     ),
 ]
 

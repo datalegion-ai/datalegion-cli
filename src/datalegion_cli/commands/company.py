@@ -149,16 +149,23 @@ async def search(
 async def discover(
     query: Annotated[str, typer.Argument(help="Natural language company search query.")],
     limit: LimitOpt = 1,
+    cursor: CursorOpt = None,
     titlecase: TitleOpt = False,
     include_fields: FieldsInclude = None,
     exclude_fields: FieldsExclude = None,
 ) -> None:
-    """Search for companies using natural language (Beta)."""
+    """Search for companies using natural language (Beta).
+
+    For the next page, pass the previous page's next_cursor as --cursor with the same query: it reruns the same search.
+
+        datalegion-cli company discover "banks in Ohio" --limit 100 --cursor <next_cursor>
+    """
     client = LegionClient()
     try:
         result = await client.company_discover(
             query=query,
             limit=limit,
+            cursor=cursor,
             titlecase=titlecase,
             include_fields=include_fields,
             exclude_fields=exclude_fields,
