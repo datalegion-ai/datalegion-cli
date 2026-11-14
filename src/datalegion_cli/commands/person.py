@@ -53,6 +53,9 @@ async def enrich(
     email_hash: Annotated[
         str | None, typer.Option("--email-hash", help="SHA-256/SHA-1/MD5 email hash.")
     ] = None,
+    npi: Annotated[
+        str | None, typer.Option("--npi", help="10-digit National Provider Identifier.")
+    ] = None,
     full_name: Annotated[str | None, typer.Option("--name", "-n", help="Full name.")] = None,
     first_name: Annotated[str | None, typer.Option("--first-name", help="First name.")] = None,
     last_name: Annotated[str | None, typer.Option("--last-name", help="Last name.")] = None,
@@ -83,6 +86,7 @@ async def enrich(
     Examples:
         datalegion-cli person enrich --email john@example.com
         datalegion-cli person enrich --name "Jane Doe" --company "Acme Corp"
+        datalegion-cli person enrich --npi 1234567893
         datalegion-cli person enrich --phone "+14155551234" --fields "full_name,work_email,job_title"
         echo '{"email":"jane@example.com"}' | datalegion-cli person enrich --stdin
     """
@@ -96,6 +100,7 @@ async def enrich(
             social_url=social_url,
             legion_id=legion_id,
             email_hash=email_hash,
+            npi=npi,
             full_name=full_name,
             first_name=first_name,
             last_name=last_name,

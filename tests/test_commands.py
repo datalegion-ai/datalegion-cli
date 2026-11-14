@@ -135,6 +135,20 @@ class TestPersonEnrich:
             )
         assert result.exit_code == 0
 
+    def test_enrich_by_npi_sends_it(self, monkeypatch):
+        _mock_config(monkeypatch)
+        sent = {}
+
+        async def fake_request(self, method, endpoint, *, payload=None, params=None):
+            sent.update(endpoint=endpoint, payload=payload)
+            return {"matches": [{"full_name": "Jane Smith"}]}
+
+        with patch("datalegion_cli.client.LegionClient.request", fake_request):
+            result = runner.invoke(app, ["person", "enrich", "--npi", "1234567893"])
+        assert result.exit_code == 0, result.output
+        assert sent["endpoint"].endswith("/person/enrich")
+        assert sent["payload"]["npi"] == "1234567893"
+
     def test_enrich_stdin(self, monkeypatch):
         _mock_config(monkeypatch)
         response = {"matches": [{"full_name": "Bob"}], "total": 1}

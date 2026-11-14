@@ -130,6 +130,9 @@ datalegion-cli person enrich --name "Jane Smith" --company "Acme Corp" --city "N
 # By LinkedIn
 datalegion-cli person enrich --social-url "https://linkedin.com/in/johndoe"
 
+# By NPI (10-digit National Provider Identifier)
+datalegion-cli person enrich --npi 1234567893
+
 # Minimum confidence
 datalegion-cli person enrich --email john@example.com --min-confidence high
 
