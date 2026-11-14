@@ -165,7 +165,7 @@ query="software engineers in San Francisco who know Rust"
 cursor=""
 while :; do
   # A failed page (a 429, 402 or 403) prints its error and stops the loop
-  page=$(datalegion-cli person discover "$query" --limit 100 ${cursor:+--cursor "$cursor"}) || { echo "$page" >&2; exit 1; }
+  page=$(datalegion-cli person discover "$query" --limit 100 ${cursor:+--cursor} ${cursor:+"$cursor"}) || { echo "$page" >&2; break; }
   echo "$page" | jq -r '.matches[].person.legion_id'
   cursor=$(echo "$page" | jq -r '.next_cursor // empty')
   [ -z "$cursor" ] && break
