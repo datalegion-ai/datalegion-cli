@@ -158,6 +158,12 @@ datalegion-cli person search "SELECT * FROM people WHERE state = 'ohio'" --limit
 datalegion-cli person discover "software engineers in San Francisco who know Rust" --limit 10
 ```
 
+For the next page, pass the last page's `next_cursor` with `--cursor` and the same query: it reruns the same search. Company discover takes it too.
+
+```bash
+datalegion-cli person discover "software engineers in San Francisco who know Rust" --limit 100 --cursor "<next_cursor from the last page>"
+```
+
 ### Company Enrichment
 
 ```bash
