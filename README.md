@@ -161,7 +161,14 @@ datalegion-cli person discover "software engineers in San Francisco who know Rus
 For the next page, pass the last page's `next_cursor` with `--cursor` and the same query: it reruns the same search. Company discover takes it too.
 
 ```bash
-datalegion-cli person discover "software engineers in San Francisco who know Rust" --limit 100 --cursor "<next_cursor from the last page>"
+query="software engineers in San Francisco who know Rust"
+cursor=""
+while :; do
+  page=$(datalegion-cli person discover "$query" --limit 100 ${cursor:+--cursor "$cursor"})
+  echo "$page" | jq -r '.matches[].person.legion_id'
+  cursor=$(echo "$page" | jq -r '.next_cursor // empty')
+  [ -z "$cursor" ] && break
+done
 ```
 
 ### Company Enrichment
