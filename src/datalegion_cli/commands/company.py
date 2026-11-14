@@ -156,8 +156,7 @@ async def discover(
 ) -> None:
     """Search for companies using natural language (Beta).
 
-    For the next page, pass the previous page's next_cursor as --cursor with the same query: it reruns the
-    same search.
+    For the next page, pass the previous page's next_cursor as --cursor with the same query: it reruns the same search.
 
         datalegion-cli company discover "banks in Ohio" --limit 100 --cursor <next_cursor>
     """

@@ -164,10 +164,12 @@ For the next page, pass the last page's `next_cursor` with `--cursor` and the sa
 query="software engineers in San Francisco who know Rust"
 cursor=""
 while :; do
-  page=$(datalegion-cli person discover "$query" --limit 100 ${cursor:+--cursor "$cursor"})
+  # A failed page (a 429, 402 or 403) prints its error and stops the loop
+  page=$(datalegion-cli person discover "$query" --limit 100 ${cursor:+--cursor "$cursor"}) || { echo "$page" >&2; exit 1; }
   echo "$page" | jq -r '.matches[].person.legion_id'
   cursor=$(echo "$page" | jq -r '.next_cursor // empty')
   [ -z "$cursor" ] && break
+  sleep 6  # Discover answers 10 requests a minute
 done
 ```
 
