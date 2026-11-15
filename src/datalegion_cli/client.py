@@ -37,7 +37,7 @@ class APIError(Exception):
 SANDBOX_PATHS = frozenset(
     f"/{entity}/{op}"
     for entity in ("person", "company")
-    for op in ("enrich", "enrich/bulk", "search", "discover")
+    for op in ("enrich", "enrich/bulk", "search", "search/count", "discover")
 )
 
 
@@ -130,6 +130,9 @@ class LegionClient:
     async def person_search(self, **kwargs: Any) -> dict[str, Any]:
         return await self.request("POST", "/person/search", payload=_strip(kwargs))
 
+    async def person_count(self, **kwargs: Any) -> dict[str, Any]:
+        return await self.request("POST", "/person/search/count", payload=_strip(kwargs))
+
     async def person_discover(self, **kwargs: Any) -> dict[str, Any]:
         return await self.request("POST", "/person/discover", payload=_strip(kwargs))
 
@@ -141,6 +144,9 @@ class LegionClient:
 
     async def company_search(self, **kwargs: Any) -> dict[str, Any]:
         return await self.request("POST", "/company/search", payload=_strip(kwargs))
+
+    async def company_count(self, **kwargs: Any) -> dict[str, Any]:
+        return await self.request("POST", "/company/search/count", payload=_strip(kwargs))
 
     async def company_discover(self, **kwargs: Any) -> dict[str, Any]:
         return await self.request("POST", "/company/discover", payload=_strip(kwargs))
