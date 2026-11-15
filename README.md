@@ -164,7 +164,7 @@ datalegion-cli person search --filters '{"state_code": "OH"}' --limit 100 --curs
 
 ### Count Before You Search
 
-`count` takes what `search` takes and prints how many records match, rounded, without returning any. It is free (10 a minute, 200 an hour). Fields that identify one record (ids, names, emails, phones, URLs, domains, tickers) are refused: use `enrich` for one record.
+`count` takes what `search` takes and prints how many records match, rounded, without returning any. It is free (10 a minute and 100 an hour; 5 and 30 on a free trial). Fields that identify one record (ids, names, emails, phones, URLs, domains, tickers) are refused: use `enrich` for one record.
 
 ```bash
 datalegion-cli person count --filters '{"job_title": "nurse practitioner", "state_code": "TX"}'
