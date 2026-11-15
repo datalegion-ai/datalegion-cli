@@ -142,17 +142,36 @@ datalegion-cli person enrich --email john@example.com --fields "full_name,emails
 
 ### Person Search
 
-```bash
-# SQL-based search
-datalegion-cli person search "SELECT * FROM people WHERE company_name ILIKE '%google%' AND state = 'CA'" --limit 5
-```
-
-`query` can also be an Elasticsearch-style query object as JSON (`bool`, `term`, `terms`, `match`, `match_phrase`, `range`, `exists`, `prefix`, `wildcard`, `nested`), on the response's own field names. For deep paging, pass each page's `next_cursor` back with `--cursor`; the last page has none. Company search takes both too.
+Search with exactly one of `--filters`, `--sql` or `--es-query` (a positional query still works: SQL, or a query object when it is JSON).
 
 ```bash
-datalegion-cli person search '{"bool": {"filter": [{"term": {"company_name": "google"}}, {"match": {"job_title": "engineer"}}]}}' --limit 100
-datalegion-cli person search "SELECT * FROM people WHERE state = 'ohio'" --limit 100 --cursor "<next_cursor from the last page>"
+# Filters on the record's own field names: a value or a list (any of them), {"gte": .., "lte": ..}, {"exists": true}
+datalegion-cli person search --filters '{"job_title": ["vp of sales", "head of sales"], "state_code": "TX"}' --limit 5
+
+# Groups and Boolean keywords
+datalegion-cli person search --filters '{"and": [{"keywords": "(\"data engineer\" OR analyst) AND python NOT intern"}, {"or": [{"state_code": "TX"}, {"city": "boston"}]}]}' --limit 10
+
+# SQL, or a query object in the Elasticsearch query syntax
+datalegion-cli person search --sql "SELECT * FROM people WHERE company_name ILIKE '%google%' AND state = 'CA'" --limit 5
+datalegion-cli person search --es-query '{"bool": {"filter": [{"term": {"company_name": "google"}}, {"match": {"job_title": "engineer"}}]}}' --limit 100
 ```
+
+For deep paging, pass each page's `next_cursor` back with `--cursor`; the last page has none. Company search takes the same inputs.
+
+```bash
+datalegion-cli person search --filters '{"state_code": "OH"}' --limit 100 --cursor "<next_cursor from the last page>"
+```
+
+### Count Before You Search
+
+`count` takes what `search` takes and prints how many records match, rounded, without returning any. It is free and works with zero credits left: it needs an active plan that includes search (10 a minute and 100 an hour; 5 and 30 on a free trial). Fields that identify one record (ids, names, emails, phones, URLs, domains, tickers) are refused: use `enrich` for one record.
+
+```bash
+datalegion-cli person count --filters '{"job_title": "nurse practitioner", "state_code": "TX"}'
+# {"total": 16000, "total_status": "about"}
+```
+
+`total_status` is `about`, `at_least` (counting ran out of time: a lower bound) or `under` (fewer than 10).
 
 ### Person Discovery (Beta)
 
@@ -193,8 +212,9 @@ datalegion-cli company enrich --name "Stripe" --industry "Financial Services"
 ### Company Search
 
 ```bash
-# SQL-based search
-datalegion-cli company search "SELECT * FROM companies WHERE industry ILIKE '%software%' AND legion_employee_count > 100"
+datalegion-cli company search --filters '{"industry": "software development", "locations.city": "austin", "locations.primary": true}'
+datalegion-cli company search --sql "SELECT * FROM companies WHERE industry ILIKE '%software%' AND legion_employee_count > 100"
+datalegion-cli company count --filters '{"industry": "banking", "locations.country_code": "GB"}'
 ```
 
 ### Company Discovery (Beta)

@@ -197,7 +197,7 @@ class TestSearchQueryObjectAndCursor:
             app, [entity, "search", '{"exists": {"field": "legion_id"}}', "--cursor", "abc"]
         )
         assert result.exit_code == 0, result.output
-        assert sent[0]["query"] == {"exists": {"field": "legion_id"}}
+        assert sent[0]["es_query"] == {"exists": {"field": "legion_id"}}
         assert sent[0]["cursor"] == "abc"
         assert json.loads(result.stdout)["next_cursor"] == "abc"
 
@@ -222,10 +222,68 @@ class TestSearchQueryObjectAndCursor:
         result = runner.invoke(app, ["person", "search", "{not json"])
         assert result.exit_code == 2
 
-    def test_sql_stays_a_string(self):
-        from datalegion_cli.commands import search_query
+    def test_sql_goes_as_sql(self):
+        from datalegion_cli.commands import search_inputs
 
-        assert search_query("SELECT * FROM people") == "SELECT * FROM people"
+        assert search_inputs("SELECT * FROM people", None, None, None) == {
+            "sql": "SELECT * FROM people"
+        }
+
+
+class TestSearchInputsAndCount:
+    @pytest.mark.parametrize(
+        ("args", "sent_as"),
+        [
+            (
+                ["--filters", '{"job_title": "nurse", "state_code": ["TX"]}'],
+                {"filters": {"job_title": "nurse", "state_code": ["TX"]}},
+            ),
+            (
+                ["--sql", "SELECT * FROM people WHERE state = 'ohio'"],
+                {"sql": "SELECT * FROM people WHERE state = 'ohio'"},
+            ),
+            (
+                ["--es-query", '{"term": {"city": "austin"}}'],
+                {"es_query": {"term": {"city": "austin"}}},
+            ),
+        ],
+    )
+    def test_search_sends_each_input_by_its_own_name(self, monkeypatch, args, sent_as):
+        _mock_config(monkeypatch)
+        sent = []
+
+        async def fake_request(self, method, endpoint, *, payload=None, params=None):
+            sent.append(payload)
+            return {"matches": [], "total": 0}
+
+        monkeypatch.setattr("datalegion_cli.client.LegionClient.request", fake_request)
+        result = runner.invoke(app, ["person", "search", *args])
+        assert result.exit_code == 0, result.output
+        assert {
+            k: v for k, v in sent[0].items() if k in ("filters", "sql", "es_query", "query")
+        } == sent_as
+
+    def test_two_inputs_are_refused(self, monkeypatch):
+        _mock_config(monkeypatch)
+        result = runner.invoke(
+            app, ["person", "search", "SELECT * FROM people", "--filters", '{"city": "austin"}']
+        )
+        assert result.exit_code == 2
+
+    @pytest.mark.parametrize("entity", ["person", "company"])
+    def test_count_posts_to_the_count_route(self, monkeypatch, entity):
+        _mock_config(monkeypatch)
+        sent = []
+
+        async def fake_request(self, method, endpoint, *, payload=None, params=None):
+            sent.append((method, endpoint, payload))
+            return {"total": 1200, "total_status": "about"}
+
+        monkeypatch.setattr("datalegion_cli.client.LegionClient.request", fake_request)
+        result = runner.invoke(app, [entity, "count", "--filters", '{"industry": "retail"}'])
+        assert result.exit_code == 0, result.output
+        assert sent == [("POST", f"/{entity}/search/count", {"filters": {"industry": "retail"}})]
+        assert json.loads(result.stdout) == {"total": 1200, "total_status": "about"}
 
 
 class TestPersonDiscover:

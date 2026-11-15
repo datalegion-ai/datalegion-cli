@@ -10,7 +10,14 @@ import typer
 
 from datalegion_cli.async_typer import async_command
 from datalegion_cli.client import APIError, LegionClient
-from datalegion_cli.commands import CursorOpt, search_query
+from datalegion_cli.commands import (
+    CursorOpt,
+    EsQueryOpt,
+    FiltersOpt,
+    QueryArg,
+    SqlOpt,
+    search_inputs,
+)
 from datalegion_cli.output import emit_credits, emit_error, emit_json, emit_search_warning
 
 app = typer.Typer(name="person", help="Person enrichment, search, and discovery.")
@@ -134,30 +141,28 @@ async def enrich(
 @app.command()
 @async_command
 async def search(
-    query: Annotated[
-        str,
-        typer.Argument(
-            help="SQL SELECT query against the people table, or a query object as JSON."
-        ),
-    ],
+    query: QueryArg = None,
+    filters: FiltersOpt = None,
+    sql: SqlOpt = None,
+    es_query: EsQueryOpt = None,
     limit: LimitOpt = 1,
     cursor: CursorOpt = None,
     titlecase: TitleOpt = False,
     include_fields: FieldsInclude = None,
     exclude_fields: FieldsExclude = None,
 ) -> None:
-    """Search for people with a SQL SELECT over the people table, no LIMIT.
+    """Search for people with --filters, SQL or a query object: exactly one.
 
     Examples:
-        datalegion-cli person search "SELECT * FROM people WHERE job_title = 'ceo' AND company_name ILIKE '%acme%'"
-        datalegion-cli person search "SELECT * FROM people WHERE city = 'san francisco'" --limit 20
-        datalegion-cli person search '{"term": {"company_name": "acme"}}' --limit 100
-        datalegion-cli person search "SELECT * FROM people WHERE state = 'ohio'" --limit 100 --cursor <next_cursor>
+        datalegion-cli person search --filters '{"job_title": "ceo", "company_domain": "acme.com"}' --limit 20
+        datalegion-cli person search "SELECT * FROM people WHERE city = 'san francisco'"
+        datalegion-cli person search --es-query '{"term": {"company_name": "acme"}}' --limit 100
+        datalegion-cli person search --filters '{"job_title": "ceo", "company_domain": "acme.com"}' --limit 100 --cursor <next_cursor>
     """
     client = LegionClient()
     try:
         result = await client.person_search(
-            query=search_query(query),
+            **search_inputs(query, filters, sql, es_query),
             limit=limit,
             cursor=cursor,
             titlecase=titlecase,
@@ -167,6 +172,34 @@ async def search(
         emit_json(result)
         emit_credits(client.last_credits_used, client.last_credits_remaining)
         emit_search_warning(client.last_search_warning)
+    except APIError as e:
+        emit_error(e.message, code=e.error, details=e.details, as_json=True)
+        raise typer.Exit(1) from e
+    finally:
+        await client.close()
+
+
+@app.command()
+@async_command
+async def count(
+    query: QueryArg = None,
+    filters: FiltersOpt = None,
+    sql: SqlOpt = None,
+    es_query: EsQueryOpt = None,
+) -> None:
+    """Count the people a search would match, rounded, without returning any. Free.
+
+    Takes what search takes. total_status is about, at_least (counting ran out of time) or under (fewer than 10).
+    Fields that identify one record (ids, names, emails, phones, URLs) are refused: use enrich for one record.
+
+    Examples:
+        datalegion-cli person count --filters '{"job_title": "ceo", "company_domain": "acme.com"}'
+        datalegion-cli person count "SELECT * FROM people WHERE city = 'san francisco'"
+    """
+    client = LegionClient()
+    try:
+        result = await client.person_count(**search_inputs(query, filters, sql, es_query))
+        emit_json(result)
     except APIError as e:
         emit_error(e.message, code=e.error, details=e.details, as_json=True)
         raise typer.Exit(1) from e
