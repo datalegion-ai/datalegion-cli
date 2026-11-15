@@ -107,12 +107,12 @@ Config is stored at `~/.datalegion/config.toml`. Override the location with `LEG
 
 The `update` command auto-detects how the CLI was installed:
 
-| Method | Detection | Update strategy |
-|--------|-----------|-----------------|
-| `brew` | The running Python is the formula's own venv under Homebrew's Cellar | `brew upgrade` |
-| `github` | Set via config | Downloads `.whl` from GitHub release |
-| `git` | An editable install from a git checkout (its `direct_url.json`) | `git pull --ff-only` + `uv sync` in that checkout |
-| `pip` | Default fallback | `uv pip install --upgrade` |
+| Method   | Detection                                                            | Update strategy                                   |
+| -------- | -------------------------------------------------------------------- | ------------------------------------------------- |
+| `brew`   | The running Python is the formula's own venv under Homebrew's Cellar | `brew upgrade`                                    |
+| `github` | Set via config                                                       | Downloads `.whl` from GitHub release              |
+| `git`    | An editable install from a git checkout (its `direct_url.json`)      | `git pull --ff-only` + `uv sync` in that checkout |
+| `pip`    | Default fallback                                                     | `uv pip install --upgrade`                        |
 
 You can override detection by setting `install_method` in config. For pip installs from a private index, set the `LEGION_PIP_INDEX_URL` environment variable.
 
@@ -293,12 +293,12 @@ datalegion-cli --sandbox person enrich --email anyone@example.com
 
 ## Global Flags
 
-| Flag | Description |
-|------|-------------|
-| `--verbose` / `-v` | Enable debug logging to stderr |
-| `--quiet` / `-q` | Suppress all log output |
-| `--sandbox` | Return sample records from enrich, search and discover, using no credits |
-| `--help` | Show help for any command |
+| Flag               | Description                                                              |
+| ------------------ | ------------------------------------------------------------------------ |
+| `--verbose` / `-v` | Enable debug logging to stderr                                           |
+| `--quiet` / `-q`   | Suppress all log output                                                  |
+| `--sandbox`        | Return sample records from enrich, search and discover, using no credits |
+| `--help`           | Show help for any command                                                |
 
 ## Development
 
