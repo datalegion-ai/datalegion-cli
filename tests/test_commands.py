@@ -208,7 +208,7 @@ class TestSearchQueryObjectAndCursor:
 
         async def fake_request(self, method, endpoint, *, payload=None, params=None):
             sent.append((endpoint, payload))
-            return {"matches": [], "total": 0, "next_cursor": "def", "generated_query": "SELECT 1"}
+            return {"matches": [], "total": 0, "next_cursor": "def"}
 
         monkeypatch.setattr("datalegion_cli.client.LegionClient.request", fake_request)
         result = runner.invoke(app, [entity, "discover", "nurses in Ohio", "--cursor", "abc"])
@@ -292,7 +292,6 @@ class TestPersonDiscover:
         response = {
             "matches": [{"full_name": "Engineer"}],
             "total": 1,
-            "generated_query": "SELECT...",
         }
         with _mock_client_request(response):
             result = runner.invoke(
@@ -305,7 +304,7 @@ class TestPersonDiscover:
             )
         assert result.exit_code == 0
         data = json.loads(result.stdout)
-        assert "generated_query" in data
+        assert data["total"] == 1
 
 
 # TODO: Uncomment when bulk enrichment is ready
@@ -377,7 +376,7 @@ class TestCompanySearch:
 class TestCompanyDiscover:
     def test_discover(self, monkeypatch):
         _mock_config(monkeypatch)
-        response = {"matches": [{"name": "Startup"}], "total": 1, "generated_query": "SELECT..."}
+        response = {"matches": [{"name": "Startup"}], "total": 1}
         with _mock_client_request(response):
             result = runner.invoke(app, ["company", "discover", "AI startups in SF"])
         assert result.exit_code == 0
