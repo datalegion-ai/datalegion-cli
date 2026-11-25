@@ -152,9 +152,11 @@ datalegion-cli person search --filters '{"job_title": ["vp of sales", "head of s
 datalegion-cli person search --filters '{"and": [{"keywords": "(\"data engineer\" OR analyst) AND python NOT intern"}, {"or": [{"state_code": "TX"}, {"city": "boston"}]}]}' --limit 10
 
 # SQL, or a query object in the Elasticsearch query syntax
-datalegion-cli person search --sql "SELECT * FROM people WHERE company_name ILIKE '%google%' AND state = 'CA'" --limit 5
+datalegion-cli person search --sql "SELECT * FROM people WHERE company_name ILIKE '%google%' AND job_title ILIKE '%engineer%'" --limit 5
 datalegion-cli person search --es-query '{"bool": {"filter": [{"term": {"company_name": "google"}}, {"match": {"job_title": "engineer"}}]}}' --limit 100
 ```
+
+Location fields (`city`, `state`, `state_code`) come with contact data; on a plan without it, a filter on them is refused with a 400.
 
 For deep paging, pass each page's `next_cursor` back with `--cursor`; the last page has none. Company search takes the same inputs.
 
@@ -167,8 +169,8 @@ datalegion-cli person search --filters '{"state_code": "OH"}' --limit 100 --curs
 `count` takes what `search` takes and prints how many records match, rounded, without returning any. It is free and works with zero credits left: it needs an active plan that includes search (10 a minute and 100 an hour; 5 and 30 on a free trial). Fields that identify one record (ids, names, emails, phones, URLs, domains, tickers) are refused: use `enrich` for one record.
 
 ```bash
-datalegion-cli person count --filters '{"job_title": "nurse practitioner", "state_code": "TX"}'
-# {"total": 16000, "total_status": "about"}
+datalegion-cli person count --filters '{"job_title": "nurse practitioner", "company_industry": "hospitals and health care"}'
+# {"total": 110000, "total_status": "about"}
 ```
 
 `total_status` is `about`, `at_least` (counting ran out of time: a lower bound) or `under` (fewer than 10).
