@@ -170,7 +170,7 @@ datalegion-cli person search --filters '{"state_code": "OH"}' --limit 100 --curs
 
 ```bash
 datalegion-cli person count --filters '{"job_title": "nurse practitioner", "company_industry": "hospitals and health care"}'
-# {"total": 16000, "total_status": "about"}
+# {"total": 110000, "total_status": "about"}
 ```
 
 `total_status` is `about`, `at_least` (counting ran out of time: a lower bound) or `under` (fewer than 10).
