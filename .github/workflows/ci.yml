@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
@@ -23,7 +24,7 @@ jobs:
       - run: uv run ruff format --check src/ tests/
 
   test-python:
-    name: test (Python ${{ matrix.python-version }})
+    name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
@@ -51,9 +52,10 @@ jobs:
           # The live tests (tests/test_live.py) call the real API; fork PRs get no secrets, so they skip there.
           DATALEGION_API_KEY: ${{ secrets.DATALEGION_API_KEY }}
 
-  # The main ruleset requires a check named `test`; it passes only when every
+  # The main ruleset requires a check named `Test`; it passes only when every
   # Python leg did.
   test:
+    name: Test
     needs: test-python
     if: always()
     runs-on: ubuntu-26.04
@@ -61,7 +63,7 @@ jobs:
       - run: '[ "${{ needs.test-python.result }}" = "success" ]'
 
   actionlint:
-    name: actionlint
+    name: Lint workflows
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
@@ -86,3 +88,5 @@ jobs:
           tar -xzf "/tmp/$f" -C /tmp actionlint
           command -v shellcheck >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck; }
           /tmp/actionlint -color
+      - name: Check workflow names use sentence case
+        run: python3 .github/scripts/check_workflow_names.py
