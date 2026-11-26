@@ -175,7 +175,7 @@ datalegion-cli person count --filters '{"job_title": "nurse practitioner", "comp
 
 `total_status` is `about`, `at_least` (counting ran out of time: a lower bound) or `under` (fewer than 10).
 
-### Person Discovery (Beta)
+### Person Discover (Beta)
 
 ```bash
 # Natural-language search
@@ -219,7 +219,7 @@ datalegion-cli company search --sql "SELECT * FROM companies WHERE industry ILIK
 datalegion-cli company count --filters '{"industry": "banking", "locations.country_code": "GB"}'
 ```
 
-### Company Discovery (Beta)
+### Company Discover (Beta)
 
 ```bash
 # Natural-language search
@@ -287,7 +287,7 @@ datalegion-cli person enrich --email bad 2>/dev/null
 
 ## Sandbox
 
-Try commands without spending credits: `--sandbox` (or `LEGION_SANDBOX=1`, or `datalegion-cli config set sandbox true`) makes enrich, search and discover return sample records with every field a real record has. Utilities, which are free, still call the real API. Sandbox discover answers only a few fixed example queries.
+Try commands without spending credits: `--sandbox` (or `LEGION_SANDBOX=1`, or `datalegion-cli config set sandbox true`) makes Enrichment, Search and Discover return sample records with every field a real record has. Utilities, which are free, still call the real API. Sandbox Discover answers only a few fixed example queries.
 
 ```bash
 datalegion-cli --sandbox person enrich --email anyone@example.com
@@ -295,12 +295,12 @@ datalegion-cli --sandbox person enrich --email anyone@example.com
 
 ## Global Flags
 
-| Flag               | Description                                                              |
-| ------------------ | ------------------------------------------------------------------------ |
-| `--verbose` / `-v` | Enable debug logging to stderr                                           |
-| `--quiet` / `-q`   | Suppress all log output                                                  |
-| `--sandbox`        | Return sample records from enrich, search and discover, using no credits |
-| `--help`           | Show help for any command                                                |
+| Flag               | Description                                                                  |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `--verbose` / `-v` | Enable debug logging to stderr                                               |
+| `--quiet` / `-q`   | Suppress all log output                                                      |
+| `--sandbox`        | Return sample records from Enrichment, Search and Discover, using no credits |
+| `--help`           | Show help for any command                                                    |
 
 ## Development
 
