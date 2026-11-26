@@ -41,7 +41,7 @@ def main_callback(
         bool,
         typer.Option(
             "--sandbox",
-            help="Return sample records from enrich, search and discover, using no credits.",
+            help="Return sample records from Enrichment, Search and Discover, using no credits.",
         ),
     ] = False,
 ) -> None:

@@ -1,4 +1,4 @@
-"""Person enrichment, search, and discovery commands."""
+"""Person Enrichment, Search and Discover commands."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from datalegion_cli.commands import (
 )
 from datalegion_cli.output import emit_credits, emit_error, emit_json, emit_search_warning
 
-app = typer.Typer(name="person", help="Person enrichment, search, and discovery.")
+app = typer.Typer(name="person", help="Person Enrichment, Search and Discover.")
 
 # ── Shared options ───────────────────────────────────────────────────
 
