@@ -52,7 +52,7 @@ jobs:
           # The live tests (tests/test_live.py) call the real API; fork PRs get no secrets, so they skip there.
           DATALEGION_API_KEY: ${{ secrets.DATALEGION_API_KEY }}
 
-  # The main ruleset requires a check named `test`; it passes only when every
+  # The main ruleset requires a check named `Test`; it passes only when every
   # Python leg did.
   test:
     name: Test

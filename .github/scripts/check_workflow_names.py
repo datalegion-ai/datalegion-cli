@@ -59,7 +59,7 @@ def _allowed(word: str) -> bool:
     """Whether a capitalized word may stay capitalized after the first word."""
     if word == "X" or word.removesuffix("'s") in PROPER:
         return True
-    if word.isupper() or any(c.isupper() for c in word[1:]):
+    if len(word) > 1 and (word.isupper() or any(c.isupper() for c in word[1:])):
         return True
     return re.search(r"\d", word) is not None
 
@@ -78,7 +78,9 @@ def problems(name: str) -> list[str]:
     out = []
     if words[0][:1].islower() and words[0] != "X":
         out.append(f"starts lowercase: {words[0]!r}")
-    for w in words[1:]:
+    # Each part of a hyphenated word counts as a word ("End-To-End" is Title Case).
+    parts = [p for w in words for p in (w.split("-") if "-" in w and w not in PROPER else [w]) if p]
+    for w in parts[1:]:
         if w[:1].isupper() and not _allowed(w):
             out.append(f"capitalized word {w!r}")
     return out
