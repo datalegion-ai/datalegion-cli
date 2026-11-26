@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   lint:
-    name: Lint & Build
+    name: Lint & build
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
@@ -146,7 +146,7 @@ jobs:
           if-no-files-found: error
 
   update-homebrew:
-    name: Update Homebrew Tap
+    name: Update Homebrew tap
     needs: [publish-pypi]
     runs-on: ubuntu-26.04
     timeout-minutes: 15  # the PyPI wait loop and the formula read each retry up to ~5 minutes
@@ -219,7 +219,7 @@ jobs:
           git push
 
   github-release:
-    name: Create GitHub Release
+    name: Create GitHub release
     needs: [publish-pypi]
     runs-on: ubuntu-26.04
     timeout-minutes: 5
@@ -232,7 +232,7 @@ jobs:
           name: dist
           path: dist
 
-      - name: Create Release
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag dist/*
