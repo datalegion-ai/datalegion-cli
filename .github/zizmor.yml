@@ -1,0 +1,6 @@
+# zizmor settings (fleet rule: datalegion-infra docs/devops-baseline.md).
+# Dependabot cooldown: the fleet takes a release after one day (baseline section 4), not zizmor's default seven.
+rules:
+  dependabot-cooldown:
+    config:
+      days: 1

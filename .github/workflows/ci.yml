@@ -13,8 +13,10 @@ jobs:
     name: Lint
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           version: "0.13.x"
           enable-cache: true
@@ -36,8 +38,10 @@ jobs:
     env:
       UV_PYTHON: ${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           version: "0.13.x"
           enable-cache: true
@@ -69,7 +73,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       # Pinned and checksum-verified (the upgrade sweep moves the version and both digests).
       # actionlint runs shellcheck on every `run:` script when shellcheck is on PATH, so
       # install it rather than let those checks skip silently.
@@ -90,3 +96,24 @@ jobs:
           /tmp/actionlint -color
       - name: Check workflow names use sentence case
         run: python3 .github/scripts/check_workflow_names.py
+
+  zizmor:
+    name: Audit workflows (zizmor)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Fleet rule (datalegion-infra docs/devops-baseline.md): every action pinned to a commit SHA, no persisted
+      # checkout token, no cache in release jobs, permissions per job. zizmor fails the job on any finding; its
+      # online audits also flag known-vulnerable actions, which Dependabot does not alert on for SHA pins.
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@1b4550e929643b8b26a62303c6bd64814271a4f1 # v0.9.2
+        with:
+          version: "1.33.1"
+          advanced-security: "false"
+          strict-collection: "true"
