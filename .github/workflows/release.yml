@@ -54,7 +54,6 @@ jobs:
       - name: Build
         run: uv build
 
-
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-26.04
@@ -93,7 +92,6 @@ jobs:
 
       - name: Run tests
         run: uv run pytest tests/ -v --tb=short
-
 
   publish-pypi:
     name: Publish to PyPI
