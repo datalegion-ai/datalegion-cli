@@ -54,9 +54,6 @@ jobs:
       - name: Build
         run: uv build
 
-      - name: Prune uv cache
-        if: always()
-        run: uv cache prune --ci
 
   test:
     name: Test (Python ${{ matrix.python-version }})
@@ -84,7 +81,6 @@ jobs:
           version: "0.13.x"
           # No cache in the tag-triggered release workflow: a poisoned cache could reach what it publishes (zizmor cache-poisoning).
           enable-cache: false
-          cache-dependency-glob: "uv.lock"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -98,9 +94,6 @@ jobs:
       - name: Run tests
         run: uv run pytest tests/ -v --tb=short
 
-      - name: Prune uv cache
-        if: always()
-        run: uv cache prune --ci
 
   publish-pypi:
     name: Publish to PyPI
